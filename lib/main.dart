@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'screens/login.dart';
 import 'screens/register.dart';
-
+import 'screens/home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +23,11 @@ class GerenciadorAbastecimento extends StatelessWidget {
       routes: {
         '/login': (context) => TelaLogin(),
         '/register': (context) => TelaCadastro(),
-        '/home': (context) => Scaffold(body: Center(child: Text('Página Inicial'))),
+        '/home': (context) => TelaPrincipal(),
+        '/meusVeiculos': (context) => Scaffold(body: Center(child: Text('Meus Veículos'))),
+        '/adicionarVeiculo': (context) => Scaffold(body: Center(child: Text('Adicionar Veículo'))),
+        '/historicoAbastecimentos': (context) => Scaffold(body: Center(child: Text('Histórico de Abastecimentos'))),
+        '/perfil': (context) => Scaffold(body: Center(child: Text('Perfil'))),
       },
     );
   }
