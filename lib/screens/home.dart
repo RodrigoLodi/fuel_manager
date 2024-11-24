@@ -1,7 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TelaPrincipal extends StatelessWidget {
+  Future<String> _buscarNomeUsuario() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId != null) {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(userId)
+          .get();
+
+      if (snapshot.exists) {
+        final dados = snapshot.data() as Map<String, dynamic>;
+        return dados['nome'] ?? 'Nome do Usuário';
+      }
+    }
+
+    return 'Nome do Usuário';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,7 +32,18 @@ class TelaPrincipal extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: [
             UserAccountsDrawerHeader(
-              accountName: Text('Nome do Usuário'),
+              accountName: FutureBuilder<String>(
+                future: _buscarNomeUsuario(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Text('Carregando...');
+                  } else if (snapshot.hasError) {
+                    return Text('Erro ao carregar nome');
+                  } else {
+                    return Text(snapshot.data ?? 'Nome do Usuário');
+                  }
+                },
+              ),
               accountEmail: Text(FirebaseAuth.instance.currentUser?.email ?? 'Sem email'),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
