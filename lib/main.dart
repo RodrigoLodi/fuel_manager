@@ -6,6 +6,8 @@ import 'screens/register.dart';
 import 'screens/home.dart';
 import 'screens/create_veiculo.dart';
 import 'screens/read_veiculo.dart';
+import 'screens/create_abastecimento.dart';
+import 'screens/read_abastecimento.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +34,8 @@ class GerenciadorAbastecimento extends StatelessWidget {
         '/perfil': (context) => Scaffold(body: Center(child: Text('Perfil'))),
         '/adicionarVeiculo': (context) => TelaAdicionarVeiculo(),
         '/meusVeiculos': (context) => TelaListaVeiculos(),
+        '/adicionarAbastecimento': (context) => TelaAdicionarAbastecimento(),
+        '/historicoAbastecimentos': (context) => TelaHistoricoAbastecimentos(),
       },
     );
   }

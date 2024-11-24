@@ -14,9 +14,7 @@ class TelaPrincipal extends StatelessWidget {
           children: [
             UserAccountsDrawerHeader(
               accountName: Text('Nome do Usuário'),
-              accountEmail: Text(
-                FirebaseAuth.instance.currentUser?.email ?? 'Usuário não autenticado',
-              ),
+              accountEmail: Text(FirebaseAuth.instance.currentUser?.email ?? 'Sem email'),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Text(
@@ -47,6 +45,14 @@ class TelaPrincipal extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/adicionarVeiculo');
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.local_gas_station),
+              title: Text('Registrar Abastecimento'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/adicionarAbastecimento');
               },
             ),
             ListTile(
