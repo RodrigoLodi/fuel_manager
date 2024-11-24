@@ -1,16 +1,22 @@
-# fuel_manager
+# Fuel Manager
 
-A new Flutter project.
+Gerenciador de abastecimentos e veículos, com funcionalidades de autenticação e controle de consumo.
 
-## Getting Started
+## Funcionalidades
+- **Autenticação:**
+  - Login e cadastro de usuários.
+  - Recuperação e atualização de dados no Firestore.
+- **Gerenciamento de Veículos:**
+  - Cadastro, listagem e visualização de veículos.
+- **Controle de Abastecimentos:**
+  - Registro de abastecimentos com cálculo automático de consumo (km/l).
+  - Histórico completo dos abastecimentos.
+- **Perfil do Usuário:**
+  - Visualização e atualização de nome, email e senha.
+- **Logout:**
+  - Desconexão segura do sistema.
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Tecnologias Utilizadas
+- Flutter
+- Firebase Authentication
+- Cloud Firestore
