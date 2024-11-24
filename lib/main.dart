@@ -8,6 +8,7 @@ import 'screens/create_veiculo.dart';
 import 'screens/read_veiculo.dart';
 import 'screens/create_abastecimento.dart';
 import 'screens/read_abastecimento.dart';
+import 'screens/detalhes_veiculo.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

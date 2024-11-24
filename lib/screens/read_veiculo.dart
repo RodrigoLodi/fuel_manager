@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'detalhes_veiculo.dart';
 
-class TelaListaVeiculos extends StatelessWidget {
+class TelaListaVeiculos extends StatefulWidget {
+  @override
+  _TelaListaVeiculosState createState() => _TelaListaVeiculosState();
+}
+
+class _TelaListaVeiculosState extends State<TelaListaVeiculos> {
   Future<QuerySnapshot> _buscarVeiculos() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId != null) {
@@ -45,8 +51,20 @@ class TelaListaVeiculos extends StatelessWidget {
 
               return ListTile(
                 title: Text(dados['nome'] ?? 'Sem nome'),
-                subtitle: Text('${dados['modelo'] ?? ''} - ${dados['ano'] ?? ''}'),
-                trailing: Text(dados['placa'] ?? ''),
+                subtitle: Text(
+                    'Modelo: ${dados['modelo'] ?? 'Sem modelo'} - Ano: ${dados['ano'] ?? 'Sem ano'}'),
+                trailing: Icon(Icons.arrow_forward),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TelaDetalhesVeiculo(
+                        veiculoId: veiculo.id,
+                        veiculoNome: dados['nome'] ?? 'Sem nome',
+                      ),
+                    ),
+                  );
+                },
               );
             },
           );
