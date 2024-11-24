@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 
 class TelaAdicionarAbastecimento extends StatefulWidget {
   @override
@@ -11,48 +10,30 @@ class TelaAdicionarAbastecimento extends StatefulWidget {
 
 class _TelaAdicionarAbastecimentoState
     extends State<TelaAdicionarAbastecimento> {
+  String? _veiculoSelecionado;
   final _litrosController = TextEditingController();
   final _quilometragemController = TextEditingController();
   DateTime? _dataSelecionada;
-  String? _veiculoSelecionado;
-  List<Map<String, dynamic>> _listaVeiculos = [];
+  bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _carregarVeiculos();
-  }
+  Future<void> _salvarAbastecimento() async {
+    if (_veiculoSelecionado == null ||
+        _litrosController.text.isEmpty ||
+        _quilometragemController.text.isEmpty ||
+        _dataSelecionada == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Preencha todos os campos.')),
+      );
+      return;
+    }
 
-  Future<void> _carregarVeiculos() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId != null) {
-        final snapshot = await FirebaseFirestore.instance
-            .collection('usuarios')
-            .doc(userId)
-            .collection('veiculos')
-            .get();
-
-        setState(() {
-          _listaVeiculos = snapshot.docs.map((doc) {
-            final dados = doc.data() as Map<String, dynamic>;
-            return {
-              'id': doc.id,
-              'nome': dados['nome'] ?? 'Sem nome',
-            };
-          }).toList();
-        });
-      }
-    } catch (erro) {
-      print("Erro ao carregar veículos: $erro");
-    }
-  }
-
-  Future<void> salvarAbastecimento() async {
-    try {
-      final userId = FirebaseAuth.instance.currentUser?.uid;
-
-      if (userId != null && _veiculoSelecionado != null) {
         await FirebaseFirestore.instance
             .collection('usuarios')
             .doc(userId)
@@ -60,91 +41,198 @@ class _TelaAdicionarAbastecimentoState
             .add({
           'veiculoId': _veiculoSelecionado,
           'litros': double.parse(_litrosController.text.trim()),
-          'quilometragem': int.parse(_quilometragemController.text.trim()),
-          'data': _dataSelecionada ?? DateTime.now(),
-          'criadoEm': DateTime.now(),
+          'quilometragem': double.parse(_quilometragemController.text.trim()),
+          'data': _dataSelecionada,
+          'criadoEm': Timestamp.now(),
         });
-
-        print("Abastecimento salvo com sucesso!");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Abastecimento salvo com sucesso!')),
+        );
         Navigator.pop(context);
-      } else {
-        print("Usuário ou veículo não autenticado!");
       }
-    } catch (erro) {
-      print("Erro ao salvar abastecimento: $erro");
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao salvar abastecimento.')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+Future<List<Map<String, String>>> _buscarVeiculos() async {
+  final userId = FirebaseAuth.instance.currentUser?.uid;
+  if (userId != null) {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('usuarios')
+        .doc(userId)
+        .collection('veiculos')
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final dados = doc.data();
+      return {
+        'id': doc.id,
+        'nome': dados['nome']?.toString() ?? 'Sem nome',
+      };
+    }).toList();
+  }
+  return [];
+}
+
+
+  void _selecionarData(BuildContext context) async {
+    final data = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (data != null) {
+      setState(() {
+        _dataSelecionada = data;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final formatoData = DateFormat('dd/MM/yyyy');
-
     return Scaffold(
+      backgroundColor: Color(0xFF1E1E1E),
       appBar: AppBar(
-        title: Text('Adicionar Abastecimento'),
+        backgroundColor: Color(0xFF1E88E5),
+        title: Text(
+          'Adicionar Abastecimento',
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DropdownButtonFormField<String>(
-              value: _veiculoSelecionado,
-              hint: Text('Selecione o Veículo'),
-              items: _listaVeiculos.map<DropdownMenuItem<String>>((veiculo) {
-                return DropdownMenuItem<String>(
-                  value: veiculo['id'] as String,
-                  child: Text(veiculo['nome'] as String),
+            FutureBuilder<List<Map<String, String>>>(
+              future: _buscarVeiculos(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  );
+                }
+                if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Text(
+                    'Nenhum veículo disponível',
+                    style: TextStyle(color: Colors.white70),
+                  );
+                }
+
+                final veiculos = snapshot.data!;
+                return DropdownButtonFormField<String>(
+                  value: _veiculoSelecionado,
+                  dropdownColor: Color(0xFF292929),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white10,
+                    labelText: 'Selecione o Veículo',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  style: TextStyle(color: Colors.white),
+                  items: veiculos
+                      .map((veiculo) => DropdownMenuItem<String>(
+                            value: veiculo['id'],
+                            child: Text(
+                              veiculo['nome']!,
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _veiculoSelecionado = value;
+                    });
+                  },
                 );
-              }).toList(),
-              onChanged: (novoVeiculoId) {
-                setState(() {
-                  _veiculoSelecionado = novoVeiculoId;
-                });
               },
             ),
-
-            SizedBox(height: 20),
+            SizedBox(height: 16),
             TextField(
               controller: _litrosController,
-              decoration: InputDecoration(labelText: 'Litros Abastecidos'),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Litros Abastecidos',
+                labelStyle: TextStyle(color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white10,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+              ),
               keyboardType: TextInputType.number,
             ),
+            SizedBox(height: 16),
             TextField(
               controller: _quilometragemController,
-              decoration: InputDecoration(labelText: 'Quilometragem Atual'),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Quilometragem Atual',
+                labelStyle: TextStyle(color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white10,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+              ),
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 16),
             Row(
               children: [
-                Text(
-                  _dataSelecionada == null
-                      ? 'Data: Não selecionada'
-                      : 'Data: ${formatoData.format(_dataSelecionada!)}',
+                Expanded(
+                  child: Text(
+                    _dataSelecionada == null
+                        ? 'Data: Não selecionada'
+                        : 'Data: ${_dataSelecionada!.day}/${_dataSelecionada!.month}/${_dataSelecionada!.year}',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
-                Spacer(),
                 TextButton(
-                  onPressed: () async {
-                    final data = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (data != null) {
-                      setState(() {
-                        _dataSelecionada = data;
-                      });
-                    }
-                  },
-                  child: Text('Selecionar Data'),
+                  onPressed: () => _selecionarData(context),
+                  child: Text(
+                    'Selecionar Data',
+                    style: TextStyle(color: Color(0xFF1E88E5)),
+                  ),
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 30),
             ElevatedButton(
-              onPressed: salvarAbastecimento,
-              child: Text('Salvar Abastecimento'),
+              onPressed: _isLoading ? null : _salvarAbastecimento,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF03DAC6),
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: _isLoading
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : Text(
+                      'Salvar Abastecimento',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
             ),
           ],
         ),

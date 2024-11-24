@@ -2,16 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class TelaAdicionarVeiculo extends StatelessWidget {
+class TelaAdicionarVeiculo extends StatefulWidget {
+  @override
+  _TelaAdicionarVeiculoState createState() => _TelaAdicionarVeiculoState();
+}
+
+class _TelaAdicionarVeiculoState extends State<TelaAdicionarVeiculo> {
   final _nomeController = TextEditingController();
   final _modeloController = TextEditingController();
   final _anoController = TextEditingController();
   final _placaController = TextEditingController();
+  bool _isLoading = false;
 
-  Future<void> salvarVeiculo() async {
+  Future<void> _salvarVeiculo() async {
+    if (_nomeController.text.isEmpty ||
+        _modeloController.text.isEmpty ||
+        _anoController.text.isEmpty ||
+        _placaController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Preencha todos os campos.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
-
       if (userId != null) {
         await FirebaseFirestore.instance
             .collection('usuarios')
@@ -22,52 +41,118 @@ class TelaAdicionarVeiculo extends StatelessWidget {
           'modelo': _modeloController.text.trim(),
           'ano': _anoController.text.trim(),
           'placa': _placaController.text.trim(),
-          'criadoEm': DateTime.now(),
+          'criadoEm': Timestamp.now(),
         });
-
-        print("Veículo salvo com sucesso!");
-      } else {
-        print("Usuário não autenticado!");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Veículo salvo com sucesso!')),
+        );
+        Navigator.pop(context);
       }
-    } catch (erro) {
-      print("Erro ao salvar veículo: $erro");
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao salvar veículo. Tente novamente.')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF1E1E1E),
       appBar: AppBar(
-        title: Text('Adicionar Veículo'),
+        backgroundColor: Color(0xFF1E88E5),
+        title: Text('Adicionar Veículo', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
               controller: _nomeController,
-              decoration: InputDecoration(labelText: 'Nome do Veículo'),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Nome do Veículo',
+                labelStyle: TextStyle(color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white10,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
+            SizedBox(height: 16),
             TextField(
               controller: _modeloController,
-              decoration: InputDecoration(labelText: 'Modelo'),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Modelo',
+                labelStyle: TextStyle(color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white10,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
+            SizedBox(height: 16),
             TextField(
               controller: _anoController,
-              decoration: InputDecoration(labelText: 'Ano'),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Ano',
+                labelStyle: TextStyle(color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white10,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+              ),
               keyboardType: TextInputType.number,
             ),
+            SizedBox(height: 16),
             TextField(
               controller: _placaController,
-              decoration: InputDecoration(labelText: 'Placa'),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Placa',
+                labelStyle: TextStyle(color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white10,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () async {
-                await salvarVeiculo();
-                Navigator.pop(context);
-              },
-              child: Text('Salvar Veículo'),
+              onPressed: _isLoading ? null : _salvarVeiculo,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF03DAC6),
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: _isLoading
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : Text(
+                      'Salvar Veículo',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
             ),
           ],
         ),

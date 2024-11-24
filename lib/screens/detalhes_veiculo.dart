@@ -2,117 +2,129 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class TelaDetalhesVeiculo extends StatefulWidget {
+class TelaDetalhesVeiculo extends StatelessWidget {
   final String veiculoId;
   final String veiculoNome;
 
-  TelaDetalhesVeiculo({required this.veiculoId, required this.veiculoNome});
+  const TelaDetalhesVeiculo({
+    required this.veiculoId,
+    required this.veiculoNome,
+  });
 
   @override
-  _TelaDetalhesVeiculoState createState() => _TelaDetalhesVeiculoState();
-}
-
-class _TelaDetalhesVeiculoState extends State<TelaDetalhesVeiculo> {
-  double? _mediaConsumo;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _calcularMediaConsumo();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFF1E1E1E),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF1E88E5),
+        title: Text(
+          'Detalhes do Veículo',
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Nome do Veículo:',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white70,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              veiculoNome,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Média de Consumo:',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white70,
+              ),
+            ),
+            SizedBox(height: 8),
+            FutureBuilder<double>(
+              future: _calcularMediaConsumo(veiculoId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Text(
+                    'Calculando...',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white70,
+                    ),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return Text(
+                    'Erro ao calcular consumo',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.red,
+                    ),
+                  );
+                }
+                return Text(
+                  '${snapshot.data?.toStringAsFixed(2) ?? 'N/A'} km/l',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF03DAC6),
+                  ),
+                );
+              },
+            ),
+            SizedBox(height: 20),
+            Divider(color: Colors.white24),
+            SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
   }
 
- Future<void> _calcularMediaConsumo() async {
-  try {
+  Future<double> _calcularMediaConsumo(String veiculoId) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId != null) {
       final snapshot = await FirebaseFirestore.instance
           .collection('usuarios')
           .doc(userId)
           .collection('abastecimentos')
-          .where('veiculoId', isEqualTo: widget.veiculoId)
+          .where('veiculoId', isEqualTo: veiculoId)
           .orderBy('quilometragem')
           .get();
 
-      if (snapshot.docs.isNotEmpty) {
+      if (snapshot.docs.length > 1) {
         double kmPercorridos = 0;
-        double totalLitrosConsumidos = 0;
+        double totalLitros = 0;
 
         for (var i = 1; i < snapshot.docs.length; i++) {
           final dadosAtual = snapshot.docs[i].data() as Map<String, dynamic>;
           final dadosAnterior = snapshot.docs[i - 1].data() as Map<String, dynamic>;
 
-          final quilometragemAtual = (dadosAtual['quilometragem'] as num).toInt();
-          final quilometragemAnterior = (dadosAnterior['quilometragem'] as num).toInt();
-          final litrosAnteriores = (dadosAnterior['litros'] as num).toDouble();
+          final quilometragemAtual = (dadosAtual['quilometragem'] as num).toDouble();
+          final quilometragemAnterior = (dadosAnterior['quilometragem'] as num).toDouble();
+          final litrosAbastecidos = (dadosAnterior['litros'] as num).toDouble();
 
-          if (litrosAnteriores > 0) {
-            kmPercorridos += (quilometragemAtual - quilometragemAnterior);
-            totalLitrosConsumidos += litrosAnteriores;
-          }
+          kmPercorridos += (quilometragemAtual - quilometragemAnterior);
+          totalLitros += litrosAbastecidos;
         }
 
-        if (kmPercorridos > 0 && totalLitrosConsumidos > 0) {
-          setState(() {
-            _mediaConsumo = kmPercorridos / totalLitrosConsumidos;
-          });
-        } else {
-          setState(() {
-            _mediaConsumo = 0;
-          });
-        }
-      } else {
-        setState(() {
-          _mediaConsumo = 0;
-        });
+        return kmPercorridos / totalLitros;
       }
     }
-  } catch (e) {
-    print("Erro ao calcular média de consumo: $e");
-  } finally {
-    setState(() {
-      _isLoading = false;
-    });
-  }
-}
-
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Detalhes do Veículo - ${widget.veiculoNome}'),
-      ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Nome do Veículo: ${widget.veiculoNome}',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'Média de Consumo:',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  Text(
-                    _mediaConsumo != null
-                        ? '${_mediaConsumo!.toStringAsFixed(2)} km/l'
-                        : 'Não foi possível calcular.',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue),
-                  ),
-                  SizedBox(height: 20),
-                ],
-              ),
-            ),
-    );
+    return 0;
   }
 }

@@ -20,18 +20,24 @@ class TelaPrincipal extends StatelessWidget {
 
     return 'Nome do Usuário';
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF1E1E1E),
       appBar: AppBar(
-        title: Text('Tela Principal'),
+        backgroundColor: Color(0xFF1E88E5),
+        title: Text('Tela Principal', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
       ),
       drawer: Drawer(
+        backgroundColor: Color(0xFF1E1E1E),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             UserAccountsDrawerHeader(
+              decoration: BoxDecoration(
+                color: Color(0xFF1E88E5),
+              ),
               accountName: FutureBuilder<String>(
                 future: _buscarNomeUsuario(),
                 builder: (context, snapshot) {
@@ -44,66 +50,57 @@ class TelaPrincipal extends StatelessWidget {
                   }
                 },
               ),
-              accountEmail: Text(FirebaseAuth.instance.currentUser?.email ?? 'Sem email'),
+              accountEmail: Text(
+                FirebaseAuth.instance.currentUser?.email ?? 'Sem email',
+                style: TextStyle(color: Colors.white70),
+              ),
               currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
+                backgroundColor: Color(0xFF03DAC6),
                 child: Text(
                   FirebaseAuth.instance.currentUser?.email?.substring(0, 1).toUpperCase() ?? '?',
-                  style: TextStyle(fontSize: 40.0),
+                  style: TextStyle(fontSize: 40.0, color: Colors.black),
                 ),
               ),
             ),
-            ListTile(
-              leading: Icon(Icons.home),
-              title: Text('Home'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushReplacementNamed(context, '/home');
-              },
+            _buildDrawerItem(
+              context,
+              icon: Icons.home,
+              title: 'Home',
+              routeName: '/home',
+            ),
+            _buildDrawerItem(
+              context,
+              icon: Icons.directions_car,
+              title: 'Meus Veículos',
+              routeName: '/meusVeiculos',
+            ),
+            _buildDrawerItem(
+              context,
+              icon: Icons.add_circle_outline,
+              title: 'Adicionar Veículo',
+              routeName: '/adicionarVeiculo',
+            ),
+            _buildDrawerItem(
+              context,
+              icon: Icons.local_gas_station,
+              title: 'Registrar Abastecimento',
+              routeName: '/adicionarAbastecimento',
+            ),
+            _buildDrawerItem(
+              context,
+              icon: Icons.history,
+              title: 'Histórico de Abastecimentos',
+              routeName: '/historicoAbastecimentos',
+            ),
+            _buildDrawerItem(
+              context,
+              icon: Icons.person,
+              title: 'Perfil',
+              routeName: '/perfil',
             ),
             ListTile(
-              leading: Icon(Icons.directions_car),
-              title: Text('Meus Veículos'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/meusVeiculos');
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.add_circle_outline),
-              title: Text('Adicionar Veículo'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/adicionarVeiculo');
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.local_gas_station),
-              title: Text('Registrar Abastecimento'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/adicionarAbastecimento');
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.history),
-              title: Text('Histórico de Abastecimentos'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/historicoAbastecimentos');
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Perfil'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/perfil');
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.logout),
-              title: Text('Logout'),
+              leading: Icon(Icons.logout, color: Colors.white),
+              title: Text('Logout', style: TextStyle(color: Colors.white)),
               onTap: () async {
                 await FirebaseAuth.instance.signOut();
                 Navigator.pop(context);
@@ -114,8 +111,27 @@ class TelaPrincipal extends StatelessWidget {
         ),
       ),
       body: Center(
-        child: Text('Bem-vindo à Tela Principal!'),
+        child: Text(
+          'Bem-vindo à Tela Principal!',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildDrawerItem(BuildContext context,
+      {required IconData icon, required String title, required String routeName}) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white),
+      title: Text(title, style: TextStyle(color: Colors.white)),
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.pushNamed(context, routeName);
+      },
     );
   }
 }

@@ -63,10 +63,6 @@ class _TelaPerfilState extends State<TelaPerfil> {
             .doc(user.uid)
             .set({'nome': _nomeController.text}, SetOptions(merge: true));
 
-        if (_emailController.text.isNotEmpty && _emailController.text != user.email) {
-          await user.updateEmail(_emailController.text);
-        }
-
         if (_senhaController.text.isNotEmpty) {
           await user.updatePassword(_senhaController.text);
         }
@@ -90,32 +86,88 @@ class _TelaPerfilState extends State<TelaPerfil> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF1E1E1E),
       appBar: AppBar(
-        title: Text('Perfil do Usuário'),
+        backgroundColor: Color(0xFF1E88E5),
+        title: Text(
+          'Perfil do Usuário',
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: Colors.white))
           : Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   TextField(
                     controller: _nomeController,
-                    decoration: InputDecoration(labelText: 'Nome'),
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: 'Nome',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Colors.white10,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
                   ),
+                  SizedBox(height: 16),
                   TextField(
                     controller: _emailController,
-                    decoration: InputDecoration(labelText: 'Email'),
+                    enabled: false,
+                    style: TextStyle(color: Colors.white70),
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Colors.white10,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
                   ),
+                  SizedBox(height: 16),
                   TextField(
                     controller: _senhaController,
-                    decoration: InputDecoration(labelText: 'Nova Senha'),
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: 'Nova Senha',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Colors.white10,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
                     obscureText: true,
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 30),
                   ElevatedButton(
-                    onPressed: _salvarAlteracoes,
-                    child: Text('Salvar Alterações'),
+                    onPressed: _isLoading ? null : _salvarAlteracoes,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF03DAC6),
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            'Salvar Alterações',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
                   ),
                 ],
               ),
