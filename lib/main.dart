@@ -4,6 +4,8 @@ import 'firebase_options.dart';
 import 'screens/login.dart';
 import 'screens/register.dart';
 import 'screens/home.dart';
+import 'screens/create_veiculo.dart';
+import 'screens/read_veiculo.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +30,8 @@ class GerenciadorAbastecimento extends StatelessWidget {
         '/adicionarVeiculo': (context) => Scaffold(body: Center(child: Text('Adicionar Veículo'))),
         '/historicoAbastecimentos': (context) => Scaffold(body: Center(child: Text('Histórico de Abastecimentos'))),
         '/perfil': (context) => Scaffold(body: Center(child: Text('Perfil'))),
+        '/adicionarVeiculo': (context) => TelaAdicionarVeiculo(),
+        '/meusVeiculos': (context) => TelaListaVeiculos(),
       },
     );
   }
